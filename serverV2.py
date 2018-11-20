@@ -1,3 +1,9 @@
+"""
+Al ejecutar desde consola:
+    python3 serverV2.py > Crea el servidor.
+    python3 serverV2.py 127.0.0.5 > Crea un cliente. Un address distinto para cada uno
+"""
+
 import socket
 import threading
 import sys
@@ -17,7 +23,8 @@ class Server:
             for connection in self.connections:
                 connection.send(bytes(data))
             if not data:
-                connections.remove(c)
+                print(str(a[0])+":"+str(a[1]),"disconected")
+                self.connections.remove(c)
                 c.close()
                 break
     def run(self):
@@ -27,9 +34,31 @@ class Server:
             cThread.daemon = True
             cThread.start()
             self.connections.append(c)
-            print(self.connections)
+            print(str(a[0])+":"+str(a[1]),"conected")
 
-if (len(sys))
+class Client:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    def sendMsg(self):
+        while True:    
+            self.sock.send(bytes(input(""), 'utf-8'))
 
-server = Server()
-server.run()
+    def __init__(self, address):
+        self.sock.connect((address, 10000))
+
+        iThread = threading.Thread(target=self.sendMsg)
+        iThread.daemon = True
+        iThread.start()
+
+        while True:
+            data = self.sock.recv(1024)
+            if not data:
+                break
+            print (str(data, 'utf-8'))
+
+
+if (len(sys.argv) > 1):
+    client = Client(sys.argv[1])
+else:
+    server = Server()
+    server.run()
