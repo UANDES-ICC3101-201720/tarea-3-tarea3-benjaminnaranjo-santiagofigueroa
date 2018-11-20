@@ -100,6 +100,9 @@ class Client:
             self.public = True
         else:
             self.public = False
+    
+    def sendFile(self, file):
+        
 
     def __init__(self, address):
         self.sock.connect((address, 10000))
