@@ -13,8 +13,8 @@ def handler(c, a):
     global connections
     while True:
         data = c.recv(1024)
-        for connection in connections:
-            connection.send(bytes(data))
+        for connection in connections: # se recorren todas las conexiones
+            connection.send(bytes(data)) # se envian los datos a esta coneccion
         if not data:
             connections.remove(c)
             c.close()
