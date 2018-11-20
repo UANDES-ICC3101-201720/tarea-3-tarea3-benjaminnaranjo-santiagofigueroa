@@ -102,7 +102,7 @@ class Client:
             self.public = False
     
     def sendFile(self, file):
-        
+        pass
 
     def __init__(self, address):
         self.sock.connect((address, 10000))
