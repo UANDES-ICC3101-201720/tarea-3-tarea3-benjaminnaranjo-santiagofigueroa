@@ -20,7 +20,7 @@ class Server:
     def handler(self, c, a):
         while True:
             data = c.recv(1024)
-            if str(data, 'utf-8') == "file":
+            if str(data, 'utf-8') == "_FILE_":
                 print ("{}:{} is asking for a file".format(a[0],a[1]))
                 data = c.recv(1024)
                 print ("\t\tLooking for '{}'.".format(str(data, 'utf-8')))
@@ -45,6 +45,7 @@ class Server:
 
 class Client:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    public = False
     
     def mainMenu(self):
         while True:
@@ -58,7 +59,6 @@ class Client:
             op_invalida = True
             while op_invalida:
                 for i,text in opciones:
-                    print ("I = {}\nInput = {}".format(i,seleccion))
                     if str(i) == str(seleccion):
                         op_invalida = False
                         break
@@ -70,14 +70,36 @@ class Client:
             elif seleccion == "2":
                 self.askFile()
             elif seleccion == "3":
-                pass
+                self.showFiles()
+                print ("Public files: {}".format(self.public))
+                
 
     def sendMsg(self):
         self.sock.send(bytes(input("Write you message: "), 'utf-8'))
     
     def askFile(self):
-        self.sock.send(bytes("file", 'utf-8'))
+        self.sock.send(bytes("_FILE_", 'utf-8'))
         self.sock.send(bytes(input("Enter the name of the file: "), 'utf-8'))
+    
+    def showFiles(self):
+        seleccion = 0
+        opciones = [(1,"SI"),
+                    (2,"NO")]
+        for i,text in opciones:
+            print ("[{}] {}.".format(i,text))
+        seleccion = input("Ingrese una opcion: ")
+        op_invalida = True
+        while op_invalida:
+            for i,text in opciones:
+                if str(i) == str(seleccion):
+                    op_invalida = False
+                    break
+            if op_invalida:    
+                seleccion = input("Opcion invalida. Ingrese una opcion: ")
+        if seleccion == "1":
+            self.public = True
+        else:
+            self.public = False
 
     def __init__(self, address):
         self.sock.connect((address, 10000))
