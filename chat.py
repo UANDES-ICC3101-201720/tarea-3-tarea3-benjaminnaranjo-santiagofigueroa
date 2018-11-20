@@ -139,7 +139,7 @@ class Client:
             if server_msg == "_SHOW_FILES_LIKE_":
                 data = self.sock.recv(1024)
                 search_value = str(data, 'utf-8')
-                result = searchFiles(search_value)
+                result = self.searchFiles(search_value)
             elif server_msg == "_BROADCAST_":
                 print (server_msg)
 
