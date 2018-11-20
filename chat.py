@@ -23,8 +23,22 @@ class Server:
             if str(data, 'utf-8') == "_FILE_":
                 print ("{}:{} is asking for a file".format(a[0],a[1]))
                 data = c.recv(1024)
-                print ("\t\tLooking for '{}'.".format(str(data, 'utf-8')))
+                search = str(data, 'utf-8')
+                search_results = []
+                print ("\t\tLooking for '{}'.".format(search))
                 # TODO: Pedir a los nodos que muestren los archivos que tienen
+                for connection in self.connections:
+                    connection.send(bytes("_SHOW_FILES_LIKE_"))
+                    connection.send(bytes(search))
+                    results = c.recv(1024)
+                    results = str(results, 'utf-8')
+                    results = results.strip()
+                    results = results.split("|") # | is a special char for separating results
+                    for r in results:
+                        search_results.append((a,r))
+                print ("Search results:")
+                for result in search_results:
+                    print ("{}:{} has '{}'".format(result[0][0], result[0][1], result[1]))
             else:
                 print ("{}:{} said: {}".format(a[0],a[1],str(data, 'utf-8')))
                 for connection in self.connections:
@@ -46,6 +60,7 @@ class Server:
 class Client:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     public = False
+    MyFiles = []
     
     def mainMenu(self):
         while True:
@@ -103,6 +118,11 @@ class Client:
     
     def sendFile(self, file):
         pass
+    
+    def searchFiles(self, searchValues):
+        if self.public == False:
+            return "Files are private"
+        
 
     def __init__(self, address):
         self.sock.connect((address, 10000))
@@ -115,7 +135,13 @@ class Client:
             data = self.sock.recv(1024)
             if not data:
                 break
-            print (str(data, 'utf-8'))
+            server_msg = str(data, 'utf-8')
+            if server_msg == "_SHOW_FILES_LIKE_":
+                data = self.sock.recv(1024)
+                search_value = str(data, 'utf-8')
+                result = searchFiles(search_value)
+            elif server_msg == "_BROADCAST_":
+                print (server_msg)
 
 
 if (len(sys.argv) > 1):
