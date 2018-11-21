@@ -37,8 +37,11 @@ class Server:
                     for r in results:
                         search_results.append((a,r))
                 print ("Search results:")
+                c.send(bytes("_SEARCH_RESULTS_", 'utf-8'))
                 for result in search_results:
                     print ("{}:{} has '{}'".format(result[0][0], result[0][1], result[1]))
+                    c.send(bytes(result[1], 'utf-8'))
+                
             else:
                 print ("{}:{} said: {}".format(a[0],a[1],str(data, 'utf-8')))
                 for connection in self.connections:
@@ -48,6 +51,7 @@ class Server:
                 self.connections.remove(c)
                 c.close()
                 break
+
     def run(self):
         while True:
             c, a = self.sock.accept()
@@ -125,6 +129,7 @@ class Client:
     def addFile(self):
         filename = input("Enter the name of the file: ")
         new_file = File(filename)
+        new_file.Data = open(filename, "r")
         self.MyFiles.append(new_file)
         print ("File added.")
     
@@ -164,6 +169,9 @@ class Client:
 class File:
     def __init__(self, Title):
         self.Title = Title
+        self.Data = ""
+    def AddData(self, Data):
+        self.Data = Data
 
 if (len(sys.argv) > 1):
     client = Client(sys.argv[1])
