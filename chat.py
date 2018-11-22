@@ -110,6 +110,7 @@ class Client:
     def askFile(self):
         self.sock.send(bytes("_FILE_", 'utf-8'))
         self.sock.send(bytes(input("Enter the name of the file: "), 'utf-8'))
+        # TODO: Esperar lista resultados, seleccionar, esperar y guardar archivo
         # aqui hay que poner un listen o algo asi, para esperar la respuesta del servidor
         # al recibirla, mostrar las opciones, y enviar de vuelta un mensaje con el titulo del archivo seleccionado
         # Esperar para recibir el archivo
