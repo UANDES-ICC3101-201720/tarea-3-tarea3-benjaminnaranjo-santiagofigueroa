@@ -76,11 +76,12 @@ class Client:
 
     def SearchFile(self):
         self.PrintTitle("search file")
-        opciones = [(1,"Full file name"), (2, "Partial file name"), (3, "Return"), (4, "Exit")]
+        opciones = [(1,"Full file name"), (2, "Partial file name")]
         self.PrintOptions(opciones)
         selection = self.ValidateOption(opciones)
+        self.sock[0].sendto(bytes("_FILE_", 'utf-8'),self.socket)
         self.RunSelection(
-            [self.FullNameSearch, self.PartialNameSearch, self.Return, self.Exit],
+            [self.FullNameSearch, self.PartialNameSearch],
             selection
         )
         if selection<3:
@@ -90,13 +91,13 @@ class Client:
 
     def FullNameSearch(self):
         file_name = input("Enter the name of the file.\n> ")
-        self.sock[0].sendto(bytes(file_name,'utf-8'), (self.socket))#check
+        self.sock[0].sendto(bytes(file_name,'utf-8'), self.socket)#check
         print ("Message delivered")
         return 1
 
     def PartialNameSearch(self):
         file_name = input("Enter the name of the file.\n> ")
-        self.sock[0].sendto(bytes(file_name,'utf-8'), (self.socket))#check
+        self.sock[0].sendto(bytes(file_name,'utf-8'), self.socket)#check
         print ("Message delivered")
         return 1
 
@@ -191,12 +192,14 @@ class Client:
 
 
         while self.cond>=0:
-            data, a = self.s.recvfrom(1024)
+            data, adr = self.s.recvfrom(1024)
+            data = str(data, 'utf-8')
+            print ("[MAIN] msg from '{}' saying: {}".format(adr,data))
             if not data:
                 break
             server_msg = str(data, 'utf-8')
             if server_msg == "_SHOW_FILES_LIKE_":
-                data = self.s.recv(1024)
+                data, adr = self.s.recvfrom(1024)
                 search_value = str(data, 'utf-8')
                 result = self.showFiles(search_value)
                 self.s.send(bytes(result, 'utf-8'))

@@ -16,15 +16,15 @@ class Server:
                 self.connections.append(address)
             if str(data, 'utf-8') == "_FILE_":
                 print ("{}:{} is asking for a file".format(address[0],address[1]))
-                self.sock.sendto(byte())#enviar mensaje al solicitante
+                self.sock.sendto(bytes("_SEND_SEARCH_",'utf-8'),address)#enviar mensaje al solicitante
                 data, asker = self.sock.recvfrom(1024)
                 search = str(data, 'utf-8')
                 search_results = []
                 print ("\t\tLooking for '{}'.".format(search))
                 # TODO: Pedir a los nodos que muestren los archivos que tienen
                 for connection in self.connections:
-                    connection.sendto(bytes("_SHOW_FILES_LIKE_", 'utf-8'),connection)
-                    connection.sendto(bytes(search, 'utf-8'),connection)
+                    self.sock.sendto(bytes("_SHOW_FILES_LIKE_", 'utf-8'),connection)
+                    self.sock.sendto(bytes(search, 'utf-8'),connection)
                     results, a = self.sock.recvfrom(1024)
                     results = str(results, 'utf-8')
                     results = results.strip()
