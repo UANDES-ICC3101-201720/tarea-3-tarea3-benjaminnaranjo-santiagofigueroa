@@ -27,23 +27,17 @@ class Server:
                     self.sock.sendto(bytes(search, 'utf-8'),connection)
                     results, a = self.sock.recvfrom(1024)
                     results = str(results, 'utf-8')
-                    results = results.strip()
-                    results = results.split("|") # | is a special char for separating results
+                    print("{} said {}".format(a,results))
+                    results = results.strip().split("|") # | is a special char for separating results
                     for r in results:
                         search_results.append((a,r))
                 
                 print ("Search results:") # esta linea muestra los resultados en la consola servidor
                 self.sock.sendto(bytes("_SEARCH_RESULTS_", 'utf-8'),asker) # se envia un mensaje especial al cliente que solicito una busqueda
                 for result in search_results:
-                    print ("{}:{} has '{}'".format(result[0][0], result[0][1], result[1]))
+                    print ("{}:{} -> '{}'".format(result[0][0], result[0][1], result[1]))
                     self.sock.sendto(bytes(result[1], 'utf-8'),asker) # se le envia una lista de las personas que tienen el archivo, para que elija cual descargar
-                    # esto es suponiendo que haya buscado una palabra y varios documentos coincidan con esa palabra.
-                    # como la foto en que buscaba caballo, y habia "mi caballo blanco" y "el caballo blanco de napoleon"
-                # TODO: Esperar respuesta de usuario, pedir archivos, enviar archivo.
-                # En esta indentacion hay que esperar la respuesta del cliente que pidió el libro.
-                # Cuando el usuario responde, se recibe el nombre del archivo, con el .txt o lo que sea
-                # sevuelve a pedir el archivo y esta vez se toma el primer resultado y se envia
-
+                    
                 
             else:
                 print ("{}:{} said: {}".format(address[0],address[1],str(data, 'utf-8')))

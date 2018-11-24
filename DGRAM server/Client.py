@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import time
 
 
 class Client:
@@ -86,6 +87,7 @@ class Client:
         )
         if selection<3:
             print ("Waiting for server answer...")
+            time.sleep(1)
             server_answer = str(self.sock[0].recv(1024),'utf-8')
             print (server_answer)
 
@@ -106,7 +108,6 @@ class Client:
     
     def Exit(self, arg = None):
         self.cond = -1
-        
         return -1
 
     def NewFile(self):
@@ -127,9 +128,9 @@ class Client:
             for file in self.MyFiles:
                 file_names += "{}|".format(file.Title)
         else:
-            file_names = "Private user"
+            file_names = "Private user|"
         if file_names == "":
-            file_names = "No matches"
+            file_names = "No matches|"
         return file_names[:-1]
 
     def ListFiles(self):
@@ -197,14 +198,15 @@ class Client:
             print ("[MAIN] msg from '{}' saying: {}".format(adr,data))
             if not data:
                 break
-            server_msg = str(data, 'utf-8')
+            server_msg = data
             if server_msg == "_SHOW_FILES_LIKE_":
                 data, adr = self.s.recvfrom(1024)
                 search_value = str(data, 'utf-8')
+                print ("[MAIN] looking for files like {}".format(search_value))
                 result = self.showFiles(search_value)
-                self.s.send(bytes(result, 'utf-8'))
+                self.sock[0].sendto(bytes(result, 'utf-8'),adr)
             elif server_msg == "_BROADCAST_":
-                print (server_msg)
+                print ("[MAIN]"+server_msg)
 
 class File:
     def __init__(self, Title, Data = ""):
