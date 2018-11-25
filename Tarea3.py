@@ -25,11 +25,11 @@ class Server:
             self.sendPeers()
             print ("{}:{} connected".format(addr[0],addr[1]))
     
-    def handler(self, conn, addr):
+    def handler(self, conn, addr):# maneja cada conexion. Revisa si piden un archivo o si lo estan enviando
         while True:
             data = conn.recv(1024)
             for connection in self.connections:
-                connection.send(data)
+                connection.send(data)# por ahora, esto envia a todas las conexiones el mensaje enviado por un usuario
             if not data:
                 self.connections.remove(conn)
                 self.peers.remove(addr[0])
@@ -38,7 +38,7 @@ class Server:
                 self.sendPeers()
                 break
 
-    def sendPeers(self):
+    def sendPeers(self):# para enviar la lista de personas conectadas a los usuarios y mantenerlos al dia en caso de que aparezca uno nuevo o alguien se vaya
         p = ""
         for peer in self.peers:
             p = p + peer + ","
@@ -48,11 +48,11 @@ class Server:
     
     def sendFile(self, filename, filesize, conn, addr):
         print("Beggining to send file")
-        conn.send(bytes("FILE,"+filename+","+str(filesize),'utf-8'))
+        conn.send(bytes("FILE,"+filename+","+str(filesize),'utf-8'))# se envia un texto especial para que el receptor sepa que viene un archivo
         with open(filename, 'rb') as file:
             data = file.read(1024)
             conn.send(data)
-            while data != bytes(''.encode()):
+            while data != bytes(''.encode()):#se envian el nombre y los datos del archivo en trozos de 1024 bytes, hasta que no queda ninguno
                 data = file.read(1024)
                 conn.send(data)
 
@@ -64,27 +64,27 @@ class Client:
         while True:
             print ("Main menu\n1. Send message\n2. Ask for file")
             opt = input("Enter a number: ")
-            if opt == "1":
+            if opt == "1": #enviar un mensaje a todo el mundo
                 print("Sending a message (mainly for testing who is listening)")
                 self.sendMsg(sock)
-            elif opt == "2":
+            elif opt == "2":#pedir un archivo
                 search_param = input("1. Search by full name\n2. Search by partial name\nEnter an option: ")
                 while search_param not in ["1", "2"]:
                     print("Invalid input")
                     search_param = input("1. Search by full name\n2. Search by partial name")
                 file_name = input("Enter the name of the file: ")
-                sock.send(bytes(file_name+","+search_param, 'utf-8'))
-                name, data = self.recvData(file_name, sock)
-                if name!=None and data!=None:
+                sock.send(bytes(file_name+","+search_param, 'utf-8'))#se envia el texto de busqueda y el tipo de busqueda, nombre completo o nombre parcial
+                name, data = self.recvData(file_name, sock)# recibe los resultados
+                if name!=None and data!=None:#si el resultado tiene contenido, se guarde en la lista MyFiles, que es una lista de objetos de la clase File
                     new_file = File(name, data)
                     self.MyFiles.append(new_file)
                     print("File added to personal library")
                 pass
 
     def sendMsg(self, sock):
-        sock.send(bytes(input(""), 'utf-8'))
+        sock.send(bytes(input(""), 'utf-8'))#enviar un mensaje al servidor, para que este lo envie a todo el mundo
 
-    def recvData(self, filename, sock):
+    def recvData(self, filename, sock):# funcion para recibir un archivo
         data = str(sock.recv(1024), 'utf-8')
         if data[:6] == "EXISTS":
             filesize = long(data[6:])
@@ -102,12 +102,13 @@ class Client:
         else:
             print ("File doesn't exists")
             return None, None
-    def updatePeers(self, peerData):
+
+    def updatePeers(self, peerData):# actualiza la lista de personas en el servidor
         p2p.peers = str(peerData, "utf-8").split(",")[:-1]
 
-    def __init__(self, addr):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    def __init__(self, addr): #iniciar la clase Cliente
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)#protocolo de confianza
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)#apagar servidor inmediatamente una vez que se cierra todo
         sock.connect((addr, 10000))
         print("Connected as client...")
         self.MyFiles = []
@@ -116,7 +117,7 @@ class Client:
         iThread.daemon = True
         iThread.start()
 
-        while True:
+        while True:# este loop detecta cuando el servidor o alguien le dice algo a este cliente
             data = sock.recv(1024)
             if not data:
                 print("{}:{} > No data to read".format(addr[0],addr[1]))
@@ -127,7 +128,7 @@ class Client:
                 print ("[SERVER]"+str(data.decode()))
 
 class p2p:
-    peers = ['127.0.0.1']
+    peers = ['127.0.0.1']#se inicia con el servidor conectado
 
 class File:
     def __init__(self, name, data):
@@ -136,20 +137,20 @@ class File:
 
 
 if __name__ == "__main__":
-    while True:
+    while True:# aqui se separa el servidor del cliente una vez que se corre el programa
         try:
             print("trying to connect...")
             time.sleep(randint(1, 5))
             for peer in p2p.peers:
                 try:
-                    client = Client(peer)
+                    client = Client(peer) #si ya hay un peer que es un servidor, se conecta al servidor
                 except KeyboardInterrupt:
                     sys.exit(0)
                 except:
                     pass
                 
                 try:
-                    server = Server()
+                    server = Server()# si nadie es servidor, se intenta transformar en servidor
                 except KeyboardInterrupt:
                     sys.exit(0)
                 except:
