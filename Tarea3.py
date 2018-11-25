@@ -5,19 +5,19 @@ from random import randint
 import sys
 
 class Server:
-    connections = []
-    peers = []
+    connections = [] #aqui se guardan las conexiones
+    peers = [] #aqui se guardan los addr de los clientes
 
     def __init__(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Protocolo de envio confiable
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # esto es para que el socket se cierre cuando se cierra el programa
         sock.bind(('0.0.0.0', 10000))
         sock.listen(1)
         print ("Server started")
 
         while True:
             conn, addr = sock.accept()
-            cThread = threading.Thread(target=self.handler, args=(conn, addr))
+            cThread = threading.Thread(target=self.handler, args=(conn, addr)) # al aceptar una conexion, crea un thread para escuchar al nuevo cliente
             cThread.daemon = True
             cThread.start()
             self.connections.append(conn)
@@ -124,7 +124,7 @@ class Client:
             if data[0:1] == b'\x11':
                 self.updatePeers(data[1:])
             else:
-                print ("[SERVER]"+str(data, 'utf-8'))
+                print ("[SERVER]"+str(data.decode()))
 
 class p2p:
     peers = ['127.0.0.1']
