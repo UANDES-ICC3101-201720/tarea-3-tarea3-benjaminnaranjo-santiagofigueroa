@@ -33,7 +33,6 @@ class Server:
             if data.decode() == "SEARCH":
                 search_params = conn.recv(1024).decode().split(",")
                 print ("Searching for '{}' with option {}".format(search_params[0], search_params[1]))
-                print (self.connections)
                 results = []
                 for other_conns in self.connections:
                     if other_conns != conn:
@@ -42,7 +41,6 @@ class Server:
                         other_conns.send(bytes("{},{}".format(search_params[0],search_params[1]), 'utf-8'))
                         print ("Waiting answer from {}".format(other_conns))
                         answer = other_conns.recv(1024).decode()
-                        print ("{}\nsaid {}".format(other_conns,answer))
                         if answer != "NORESULTS":
                             results.append((other_conns, answer))
                 if len(results)>0:
@@ -128,25 +126,26 @@ class Client:
                         if owner_results == "CLIENTSRESULTSEND":
                             break
                         owner_results = owner_results.split(";")
-                        for r in owner_results:
+                        for r in owner_results: # se muestran los resultados
+                            # owner results deberia ser algo asi: ["Archivo1,25", "Archivo2,16"]
+                            # donde lo que está antes de la coma es el nombre del archivo, y el numero es el tamano en bytes
                             r = r.split(',')
                             print ("{}. {} - {} bytes".format(ind, r[0], r[1]))
                             opts.append(str(ind))
                             names.append(r[0])
                             ind+=1
                         searchResults.append(owner_results)
-                        #print("Result recieved")
                     print("No more results")
-                    select = input("Chose the file to download")
+                    select = input("Chose the file to download: ")
                     while select not in opts:
-                        select = input("Chose the file to download")
+                        select = input("Chose the file to download: ")
                     sock.send(bytes(select, 'utf-8'))
                     self.recvData(sock, names[int(select)])
                     #TODO: seguir con la seleccion del archivo
                 elif server_msg == "NORESULTS":
                     print("No results for the search of {}".format(file_name))
             
-            elif opt == "3":
+            elif opt == "3":# revisar mis archivos, y leerlos
                 print ("[View a file]".upper())
                 print (" Available files:")
                 ind = 1
@@ -182,7 +181,7 @@ class Client:
                 sock.send("FILE"+str(filesize), 'utf-8')
                 time.sleep(0.5)
                 datasent = 0
-                while datasent<filesize:
+                while datasent<filesize:# se envian pedazos del archivo de 1024 bytes, hasta enviar todo el archivo
                     goal = datasent+1024
                     if datasent+1024>filesize:
                         goal = filesize
@@ -197,11 +196,11 @@ class Client:
             bFile = b""
             fileSize = int(data[4:])
             dataRecv = 0
-            while dataRecv<fileSize:
+            while dataRecv<fileSize:# se reciben pedazos del archivo de 1024 bytes, hasta haberlo recibido completo
                 data = sock.recv(1024)
                 bFile += data
                 dataRecv = len(bFile)
-            self.MyFiles.append(File(filename, bFile.decode()))
+            self.MyFiles.append(File(filename, bFile.decode()))# se agrega el archivo a la libreria
             print ("File aded to library")
 
     def updatePeers(self, peerData):# actualiza la lista de personas en el servidor
@@ -209,30 +208,25 @@ class Client:
 
     def findFilesLike(self, sock):
         search_params = sock.recv(1024).decode().split(',')
-        print("Params: {}".format(search_params))
         if search_params[1] == "1": #full name coincidence
             result_answer = "" # looks like "name1,25;name2,43" where name1 is the name of the file, and the number is the size 
             if len(self.MyFiles)>0:
                 for file in self.MyFiles:
                     if file.Name == search_params[0]:
                         result_answer += "{},{};".format(file.Name, len(bytes(file.Data, 'utf-8')))
-                print("sending an answer to the server: '{}'".format(result_answer))
-                if len(result_answer)>0:
+                if len(result_answer)>0:# si hay un resultado, se envia una respuesta
                     sock.send(bytes(result_answer[:-1], 'utf-8'))
-                else:
-                    sock.send("NORESULTS".encode())
             else:
                 sock.send("NORESULTS".encode())
+
         elif search_params[1] == "2": #partial name coincidence
             result_answer = "" # looks like "name1,25;name2;43" where name1 is the name of the file, and the number is the size 
             if len(self.MyFiles)>0:
                 for file in self.MyFiles:
                     if search_params[0] in file.Name:
                         result_answer += "{},{};".format(file.Name, len(bytes(file.Data, 'utf-8')))
-                if len(result_answer)>0:
+                if len(result_answer)>0:# si hay un resultado, se envia una respuesta
                     sock.send(bytes(result_answer[:-1], 'utf-8'))
-                else:
-                    sock.send("NORESULTS".encode())
             else:
                 sock.send("NORESULTS".encode())
 
@@ -243,6 +237,7 @@ class Client:
         print("Connected as client...")
         self.MyFiles = []
 
+        # se crea un thread para que atienda al usuario: le muestra un menu y opciones para pedir, crear y ver archivos
         iThread = threading.Thread(target=self.Menu, args=(sock,))
         iThread.daemon = True
         iThread.start()
